@@ -40,14 +40,9 @@ function getPromise(number) {
  * Promise.reject('fail')     => promise that will be fulfilled with 'fail' value
  */
 function getPromiseResult(source) {
-  return new Promise((resolve, reject) => {
-    if (source) {
-      resolve('success');
-    } else {
-      resolve('fail');
-    }
-
-    reject(new Error('something bad happened'));
+  return new Promise((resolve) => {
+    source.then(() => resolve('success'));
+    source.catch(() => resolve('fail'));
   });
 }
 
@@ -65,13 +60,24 @@ function getPromiseResult(source) {
  * [Promise.reject(1), Promise.reject(2), Promise.reject(3)]    => Promise rejected
  */
 function getFirstResolvedPromiseResult(promises) {
-  let result;
-
-  for (let i = 0; i < promises.length; i += 1) {
-    return new Promise((resolve, reject) => {});
-  }
+  return new Promise((resolve, reject) => {
+    let result = false;
+    promises.forEach((prom) => {
+      prom
+        .then((value) => {
+          if (!result) {
+            result = true;
+            resolve(value);
+          }
+        })
+        .catch(() => {
+          if (promises.indexOf(prom) === promises.length - 1) {
+            reject();
+          }
+        });
+    });
+  });
 }
-
 /**
  * Returns containing the value of the first promise of a resolved or a rejected.
  *
